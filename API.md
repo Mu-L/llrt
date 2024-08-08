@@ -115,6 +115,18 @@ Available globally
 > [!NOTE]
 > `require` is available from esm modules natively. This function is just for compatibility
 
+## net
+
+> [!WARNING]
+> These APIs uses native streams that is not 100% compatible with the Node.js Streams API. Server APIs like `createSever` provides limited functionality useful for testing purposes. Serverless applications typically don't expose servers. Some server options are not supported:
+> `highWaterMark`, `pauseOnConnect`, `keepAlive`, `noDelay`, `keepAliveInitialDelay`
+
+[connect](https://nodejs.org/api/net.html#netconnect)
+
+[createConnection](https://nodejs.org/api/net.html#netcreateconnection)
+
+[createServer](https://nodejs.org/api/net.html#netcreateserveroptions-connectionlistener)
+
 ## os
 
 [platform](https://nodejs.org/api/os.html#osplatform)
@@ -241,33 +253,48 @@ export class URLSearchParams {
 }
 ```
 
-### TODO, URLSearchParams see tracking [ticket](https://github.com/awslabs/llrt/issues/307):
-
-```typescript
-URLSearchParams.sort(): void;
-```
-
 ## util
 
 > [!IMPORTANT]
-> Supported encodings: hex, base64, utf8, iso88591.
-> Supported methods: `encode` & `decode`
+> Supported encodings: hex, base64, utf-8, utf-16le, windows-1252 and their aliases.
 
 [TextDecoder](https://nodejs.org/api/util.html#class-utiltextdecoder)
 
 [TextEncoder](https://nodejs.org/api/util.html#class-utiltextdecoder)
 
-## net
+## zlib
 
-> [!WARNING]
-> These APIs uses native streams that is not 100% compatible with the Node.js Streams API. Server APIs like `createSever` provides limited functionality useful for testing purposes. Serverless applications typically don't expose servers. Some server options are not supported:
-> `highWaterMark`, `pauseOnConnect`, `keepAlive`, `noDelay`, `keepAliveInitialDelay`
+[deflate](https://nodejs.org/api/zlib.html#zlibdeflatebuffer-options-callback)
 
-[connect](https://nodejs.org/api/net.html#netconnect)
+[deflateSync](https://nodejs.org/api/zlib.html#zlibdeflatesyncbuffer-options)
 
-[createConnection](https://nodejs.org/api/net.html#netcreateconnection)
+[deflateRaw](https://nodejs.org/api/zlib.html#zlibdeflaterawbuffer-options-callback)
 
-[createServer](https://nodejs.org/api/net.html#netcreateserveroptions-connectionlistener)
+[deflateRawSync](https://nodejs.org/api/zlib.html#zlibdeflaterawsyncbuffer-options)
+
+[gzip](https://nodejs.org/api/zlib.html#zlibgzipbuffer-options-callback)
+
+[gzipSync](https://nodejs.org/api/zlib.html#zlibgzipsyncbuffer-options)
+
+[inflate](https://nodejs.org/api/zlib.html#zlibinflatebuffer-options-callback)
+
+[inflateSync](https://nodejs.org/api/zlib.html#zlibinflatesyncbuffer-options)
+
+[inflateRaw](https://nodejs.org/api/zlib.html#zlibinflaterawbuffer-options-callback)
+
+[inflateRawSync](https://nodejs.org/api/zlib.html#zlibinflaterawsyncbuffer-options)
+
+[gunzip](https://nodejs.org/api/zlib.html#zlibgunzipbuffer-options-callback)
+
+[gunzipSync](https://nodejs.org/api/zlib.html#zlibgunzipsyncbuffer-options)
+
+[brotliCompress](https://nodejs.org/api/zlib.html#zlibbrotlicompressbuffer-options-callback)
+
+[brotliCompressSync](https://nodejs.org/api/zlib.html#zlibbrotlicompresssyncbuffer-options)
+
+[brotliDecompress](https://nodejs.org/api/zlib.html#zlibbrotlidecompressbuffer-options-callback)
+
+[brotliDecompressSync](https://nodejs.org/api/zlib.html#zlibbrotlidecompresssyncbuffer-options)
 
 ## llrt:hex
 
