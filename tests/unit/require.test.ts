@@ -3,7 +3,7 @@ const CWD = process.cwd();
 import { spawn } from "child_process";
 
 import { platform } from "os";
-const IS_WIN = platform() === "win32";
+const IS_WINDOWS = platform() === "win32";
 
 it("should require a file (absolute path)", () => {
   const { hello } = _require(`${CWD}/fixtures/hello.js`);
@@ -115,7 +115,7 @@ it("should handle inner referenced exports", () => {
   expect(a.length()).toBe(1);
 });
 
-if (!IS_WIN) {
+if (!IS_WINDOWS) {
   it("should handle named exports from CJS imports", (cb) => {
     spawn(process.argv0, [
       "-e",
@@ -141,4 +141,24 @@ it("require `lodash.merge` module element", () => {
 
 it("require `uuid` module element", () => {
   _require(`${CWD}/fixtures/test_modules/test-uuid.js`);
+});
+
+//create a test that spawns a subprocess and executes require.mjs from fixtures and captures stdout
+it("should handle blocking requires", (done) => {
+  const proc = spawn(process.argv0, [`${CWD}/fixtures/require.mjs`]);
+  let stdout = "";
+  proc.stdout.on("data", (data) => {
+    stdout += data.toString();
+  });
+  proc.on("close", (code) => {
+    try {
+      expect(code).toBe(0);
+      expect(stdout).toBe(
+        ["1", "2", "3", "4", "5", "hello world!", "6", ""].join("\n")
+      );
+      done();
+    } catch (e) {
+      done(e);
+    }
+  });
 });
