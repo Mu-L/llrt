@@ -2,10 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 use std::{cmp::min, env, fmt::Write, process::exit, result::Result as StdResult};
 
-use llrt_json::{parse::json_parse, stringify::json_stringify_replacer_space};
+use llrt_json::{parse::json_parse_string, stringify::json_stringify_replacer_space};
 use llrt_numbers::number_to_string;
 use llrt_utils::{
-    bytes::ObjectBytes,
     error::ErrorExtensions,
     object::ObjectExt,
     primordials::{BasePrimordials, Primordial},
@@ -26,7 +25,7 @@ pub static COMPRESSION_DICT: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/c
 use crate::{
     environment, http,
     module_loader::{loader::CustomLoader, require, resolver::CustomResolver},
-    modules::{console, crypto::SYSTEM_RANDOM, repl::run_repl},
+    modules::{console, crypto::SYSTEM_RANDOM},
     security,
     utils::clone::structured_clone,
 };
@@ -166,10 +165,6 @@ impl Vm {
         self.run(source, strict, global).await;
     }
 
-    pub async fn run_repl(&self) {
-        run_repl(&self.ctx).await;
-    }
-
     pub async fn run<S: Into<Vec<u8>> + Send>(&self, source: S, strict: bool, global: bool) {
         self.run_with(|ctx| {
             let mut options = EvalOptions::default();
@@ -208,11 +203,6 @@ impl Vm {
         self.runtime.idle().await;
         Ok(())
     }
-}
-
-fn json_parse_string<'js>(ctx: Ctx<'js>, bytes: ObjectBytes<'js>) -> Result<Value<'js>> {
-    let bytes = bytes.as_bytes();
-    json_parse(&ctx, bytes)
 }
 
 fn init(ctx: &Ctx<'_>) -> Result<()> {

@@ -1,6 +1,6 @@
 import * as urlModule from "url";
 import { platform } from "os";
-const IS_WIN = platform() === "win32";
+const IS_WINDOWS = platform() === "win32";
 
 describe("URL module import", () => {
   it("global URL and imported URL are equal", () => {
@@ -317,6 +317,11 @@ describe("Request class", () => {
     expect(await request.text()).toEqual("Hello, world!");
     expect((await request.blob()).size).toEqual(blob.size);
     expect((await request.blob()).type).toEqual("text/plain");
+  });
+
+  it("should ignore request options which are not an object", async () => {
+    const request = new Request("http://localhost", undefined);
+    expect(request instanceof Request).toBeTruthy();
   });
 });
 
@@ -824,7 +829,7 @@ describe("URL Utility Functions", () => {
   });
 
   it("converts system path to file URL with pathToFileURL", () => {
-    if (IS_WIN) {
+    if (IS_WINDOWS) {
       const url = urlModule.pathToFileURL("C:/path/to/file.txt");
       expect(url.href).toBe("file:///C:/path/to/file.txt");
     } else {

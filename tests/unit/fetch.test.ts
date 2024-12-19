@@ -1,13 +1,49 @@
 import net from "net";
 import { spawn } from "child_process";
 import { platform } from "os";
-const IS_WIN = platform() === "win32";
+const IS_WINDOWS = platform() === "win32";
 
 let server: net.Server;
 let url: string;
 
+const { LLRT_LOG, ...TEST_ENV } = process.env;
+
+// Helper function to spawn process and collect output
+const spawnAndCollectOutput = (deniedUrl: URL, env: Record<string, string>) => {
+  return new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
+    const proc = spawn(
+      process.argv[0],
+      [
+        "-e",
+        `fetch("${deniedUrl}").catch(console.error).then(() => fetch("${url}")).then(() => console.log("OK"))`,
+      ],
+      {
+        env: {
+          ...TEST_ENV,
+          ...env,
+        },
+      }
+    );
+
+    let stdout = "";
+    let stderr = "";
+
+    proc.stderr.on("data", (data) => {
+      stderr += data.toString();
+    });
+    proc.stdout.on("data", (data) => {
+      stdout += data.toString();
+    });
+    proc.on("close", () => {
+      resolve({ stdout, stderr });
+    });
+    proc.on("error", reject);
+  });
+};
+
 beforeAll((done) => {
   server = net.createServer((socket) => {
+    socket.on("error", () => {}); //ignore errors as abort signals might cancel the socket
     socket.on("data", () => {
       socket.write(
         "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n<html></html>"
@@ -18,7 +54,7 @@ beforeAll((done) => {
 
   server.listen(() => {
     const { address, port } = server.address()! as any as net.AddressInfo;
-    url = `http://${IS_WIN ? "localhost" : address}:${port}`;
+    url = `http://${IS_WINDOWS ? "localhost" : address}:${port}`;
     done();
   });
 });
@@ -76,68 +112,26 @@ describe("fetch", () => {
     await Promise.all(new Array(10).fill(0).map(() => fetch(url)));
   });
 
-  it("is not allowed to fetch", (done) => {
-    let deniedUrl = new URL("https://www.amazon.com");
+  it("is not allowed to fetch", async () => {
+    const deniedUrl = new URL("https://www.amazon.com");
+    const { stdout, stderr } = await spawnAndCollectOutput(deniedUrl, {
+      LLRT_NET_DENY: "amazon.com",
+    });
 
-    let proc = spawn(
-      process.argv[0],
-      [
-        "-e",
-        `fetch("${deniedUrl}").catch(console.error).then(() => fetch("${url}")).then(() => console.log("OK"))`,
-      ],
-      {
-        env: {
-          LLRT_NET_DENY: "amazon.com",
-        },
-      }
-    );
-    let stdout = "";
-    let stderr = "";
-    proc.stderr.on("data", (data) => {
-      stderr += data.toString();
-    });
-    proc.stdout.on("data", (data) => {
-      stdout += data.toString();
-    });
-    proc.on("close", () => {
-      expect(stderr.trim()).toEqual(`Error: URL denied: ${deniedUrl.hostname}`);
-      expect(stdout.trim()).toEqual("OK");
-      done();
-    });
-    proc.on("error", done);
+    expect(stderr.trim()).toEqual(`Error: URL denied: ${deniedUrl.hostname}`);
+    expect(stdout.trim()).toEqual("OK");
   });
 
-  it("is only allowed to fetch", (done) => {
-    let deniedUrl = new URL("https://www.amazon.com");
+  it("is only allowed to fetch", async () => {
+    const deniedUrl = new URL("https://www.amazon.com");
+    const { stdout, stderr } = await spawnAndCollectOutput(deniedUrl, {
+      LLRT_NET_ALLOW: url,
+    });
 
-    let proc = spawn(
-      process.argv[0],
-      [
-        "-e",
-        `fetch("${deniedUrl}").catch(console.error).then(() => fetch("${url}")).then(() => console.log("OK"))`,
-      ],
-      {
-        env: {
-          LLRT_NET_ALLOW: url.toString(),
-        },
-      }
+    expect(stderr.trim()).toEqual(
+      `Error: URL not allowed: ${deniedUrl.hostname}`
     );
-    let stdout = "";
-    let stderr = "";
-    proc.stderr.on("data", (data) => {
-      stderr += data.toString();
-    });
-    proc.stdout.on("data", (data) => {
-      stdout += data.toString();
-    });
-    proc.on("close", () => {
-      expect(stderr.trim()).toEqual(
-        `Error: URL not allowed: ${deniedUrl.hostname}`
-      );
-      expect(stdout.trim()).toEqual("OK");
-      done();
-    });
-    proc.on("error", done);
+    expect(stdout.trim()).toEqual("OK");
   });
 
   it("should be abortable using signals", async () => {

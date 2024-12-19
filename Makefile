@@ -4,7 +4,7 @@ TARGET_darwin_x86_64 = x86_64-apple-darwin
 TARGET_darwin_arm64 = aarch64-apple-darwin
 TARGET_windows_x86_64 = x86_64-pc-windows-gnu
 TARGET_windows_arm64 = aarch64-is-not-yet-supported
-RUST_VERSION = nightly
+RUST_VERSION = nightly-2024-12-01
 TOOLCHAIN = +$(RUST_VERSION)
 BUILD_ARG = $(TOOLCHAIN) build -r
 BUILD_DIR = ./target/release
@@ -168,9 +168,8 @@ run-ssr: js
 	cargo build
 	cd example/functions && yarn build && cd build && ../../../target/debug/llrt
 
-flame: export CARGO_PROFILE_RELEASE_DEBUG = true
 flame:
-	cargo flamegraph
+	cargo flamegraph --profile flame -- index.mjs
 
 run-cli: export RUST_LOG = llrt=trace
 run-cli: js
